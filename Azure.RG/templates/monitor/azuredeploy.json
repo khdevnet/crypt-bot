@@ -1,0 +1,199 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "author": "Anton Shcherbyna",
+    "contact": "anton.shcherbyna@outlook.com",
+    "reference": "https://docs.microsoft.com/en-us/azure/templates/"
+  },
+  "parameters": {
+    "params": {
+      "type": "object"
+    },
+    "logRetentionInDays": {
+      "type": "int",
+      "minValue": -1,
+      "maxValue": 730,
+      "defaultValue": 31,
+      "metadata": {
+        "description": "Number of days to keep the logs. -1 for unlimited retention."
+      }
+    },
+    "resourceLocation": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location to deploy the resources."
+      }
+    }
+    //,
+    //"actionGroupEmail": {
+    //  "type": "string",
+    //  "metadata": {
+    //    "description": "Email address of default action group to send alerts."
+    //  }
+    //}
+  },
+  "variables": {
+    "baseName": "[toLower(concat(parameters('params').Market, '-',  parameters('params').Env, '-', parameters('params').Realm, '-', parameters('params').Company))]",
+    "names": {
+      "LogSpace": "[variables('baseName')]",
+      "AppInsights": "[variables('baseName')]",
+      "ActionGroup": "[variables('baseName')]",
+      "AnomaliesDetector": "[ concat('anomalies-', variables('baseName'))]"
+    },
+    "tags": {
+      "Realm": "[toUpper(parameters('params').Realm)]",
+      "Env": "[toUpper(parameters('params').Env)]",
+      "Market": "[toUpper(parameters('params').Market)]"
+    },
+    "LogSpace": {
+      "Name": "[variables('names').LogSpace]",
+      "Id": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('names').LogSpace)]",
+      "RetentionInDays": "[parameters('logRetentionInDays')]"
+    },
+    "AppInsights": {
+      "Name": "[variables('names').AppInsights]",
+      "Id": "[resourceId('Microsoft.Insights/components', variables('names').AppInsights)]"
+    }
+    //,
+    //"ActionGroup": {
+    //  "Name": "[variables('names').ActionGroup]",
+    //  "Id": "[resourceId('microsoft.insights/actionGroups', variables('names').ActionGroup)]",
+    //  "ShortName": "Watchmen",
+    //  "Email": "[parameters('actionGroupEmail')]"
+    //},
+    //"AnomaliesDetector": {
+    //  "Name": "[variables('names').AnomaliesDetector]"
+    //}
+  },
+  "resources": [
+    // Log Space
+    {
+      "name": "[variables('LogSpace').Name]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2020-03-01-preview",
+      "tags": {
+        "realm": "[variables('tags').Realm]",
+        "env": "[variables('tags').Env]",
+        "market": "[variables('tags').Market]",
+        "displayName": "Log Space"
+      },
+      "location": "[parameters('resourceLocation')]",
+      "properties": {
+        "sku": {
+          "name": "Standalone"
+        },
+        "retentionInDays": "[variables('LogSpace').RetentionInDays]",
+        "publicNetworkAccessForIngestion": "Disabled"
+      }
+    },
+    // App Insights
+    {
+      "name": "[variables('AppInsights').Name]",
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02-preview",
+      "location": "[parameters('resourceLocation')]",
+      "tags": {
+        "realm": "[variables('tags').Realm]",
+        "env": "[variables('tags').Env]",
+        "market": "[variables('tags').Market]",
+        "displayName": "App Insights"
+      },
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[variables('LogSpace').Id]"
+      },
+      "dependsOn": [
+        "[variables('LogSpace').Id]"
+      ]
+    },
+    // Default Action Group - Watchmen
+    //{
+    //  "name": "[variables('ActionGroup').Name]",
+    //  "type": "microsoft.insights/actionGroups",
+    //  "apiVersion": "2019-06-01",
+    //  "location": "global",
+    //  "tags": {
+    //    "realm": "[variables('tags').Realm]",
+    //    "env": "[variables('tags').Env]",
+    //    "market": "[variables('tags').Market]",
+    //    "displayName": "Action Group"
+    //  },
+    //  "properties": {
+    //    "groupShortName": "[variables('ActionGroup').ShortName]",
+    //    "enabled": true,
+    //    "emailReceivers": [
+    //      {
+    //        "name": "[concat('Email-', variables('ActionGroup').ShortName)]",
+    //        "emailAddress": "[variables('ActionGroup').Email]",
+    //        "useCommonAlertSchema": true
+    //      }
+    //    ]
+    //    //,
+    //    //"webhookReceivers":
+    //    //[
+    //    //	{
+    //    //		"name": "string",
+    //    //		"serviceUri": "string",
+    //    //		"useCommonAlertSchema": "boolean",
+    //    //		"useAadAuth": "boolean",
+    //    //		"objectId": "string",
+    //    //		"identifierUri": "string",
+    //    //		"tenantId": "string"
+    //    //	}
+    //    //],
+    //  }
+    //},
+    // App Insights - Anomalies Detector
+    //{
+    //  "name": "[variables('AnomaliesDetector').Name]",
+    //  "type": "microsoft.alertsmanagement/smartdetectoralertrules",
+    //  "apiVersion": "2019-06-01",
+    //  "location": "global",
+    //  "properties": {
+    //    "description": "Failure Anomalies notifies of an unusual rise in the rate of failed HTTP requests or dependency calls.",
+    //    "state": "Enabled",
+    //    "severity": "Sev3",
+    //    "frequency": "PT1M",
+    //    "detector": {
+    //      "id": "FailureAnomaliesDetector",
+    //      "name": "Failure Anomalies",
+    //      "description": "Detects if solution experiences an abnormal rise.",
+    //      "supportedResourceTypes": [
+    //        "ApplicationInsights"
+    //      ]
+    //    },
+    //    "scope": [
+    //      "[variables('AppInsights').Id]"
+    //    ],
+    //    "actionGroups": {
+    //      "groupIds": [
+    //        "[variables('ActionGroup').Id]"
+    //      ]
+    //    }
+    //  },
+    //  "dependsOn": [
+    //    "[variables('AppInsights').Id]",
+    //    "[variables('ActionGroup').Id]"
+    //  ]
+    //}
+  ],
+  "outputs": {
+    "appInsightsResourceId": {
+      "type": "string",
+      "value": "[variables('AppInsights').Id]",
+      "metadata": {
+        "description": "App Insights resource identifier."
+      }
+    },
+    "appInsightsInstrumentationKey": {
+      "type": "string",
+      "value": "[reference(variables('AppInsights').Id, providers('Microsoft.Insights', 'components').apiVersions[0]).InstrumentationKey]",
+      "metadata": {
+        "description": "App Insights instrumentation key."
+      }
+    }
+  }
+}

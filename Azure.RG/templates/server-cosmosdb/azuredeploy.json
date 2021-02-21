@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "author": "Anton Shcherbyna",
+    "contact": "anton.shcherbyna@outlook.com",
+    "reference": "https://docs.microsoft.com/en-us/azure/templates/microsoft.documentdb/databaseaccounts/mongodbdatabases"
+  },
+  "parameters": {
+    "params": {
+      "type": "object",
+      "metadata": {
+        "description": "Base parameters to build resource names and tags."
+      }
+    },
+    "resourceLocation": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location to deploy the resources."
+      }
+    },
+    "action": {
+      "type": "string",
+      "defaultValue": "Create",
+      "allowedValues": [
+        "Create"
+      ],
+      "metadata": {
+        "description": "The action to be performed for Server."
+      }
+    },
+    "databaseName": {
+      "type": "string",
+      "defaultValue": "crypto-bot"
+    }
+  },
+  "variables": {
+    "baseName": "[toLower(concat(parameters('params').Market, '-',  parameters('params').Env, '-', parameters('params').Realm, '-', parameters('params').Company))]",
+    "names": {
+      "MongoDbServer": "[ concat( if( equals( parameters('action'), 'Replicate'), 'readonly-', 'readwrite-'), variables('baseName')) ]",
+    },
+    "tags": {
+      "Realm": "[toUpper(parameters('params').Realm)]",
+      "Env": "[toUpper(parameters('params').Env)]",
+      "Market": "[toUpper(parameters('params').Market)]"
+    },
+    "MongoDbServer": {
+      "Name": "[variables('names').MongoDbServer]",
+      "Version": "3.6"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "name": "[variables('MongoDbServer').Name]",
+      "apiVersion": "2020-04-01",
+      "location": "[parameters('resourceLocation')]",
+      "kind": "MongoDB",
+      "properties": {
+        "locations": [
+          {
+            "id": "[concat(parameters('databaseName'), '-', parameters('resourceLocation'))]",
+            "failoverPriority": 0,
+            "locationName": "[parameters('resourceLocation')]"
+          }
+        ],
+        "databaseAccountOfferType": "Standard",
+        "apiProperties": {
+          "serverVersion": "[variables('MongoDbServer').Version]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
+      "name": "[concat(variables('MongoDbServer').Name, '/', parameters('databaseName'))]",
+      "apiVersion": "2020-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/', variables('MongoDbServer').Name)]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('databaseName')]"
+        },
+        "options": {
+        }
+      }
+    }
+  ],
+  "outputs": {
+    //"ServerName": {
+    //  "type": "string",
+    //  "value": "[reference(variables('MySqlServer').Id, providers('Microsoft.DBforMySQL', 'servers').apiVersions[0]).fullyQualifiedDomainName]",
+    //  "metadata": {
+    //    "description": "Name of the MySql server."
+    //  }
+    //},
+    //"ServerId": {
+    //  "type": "string",
+    //  "value": "[variables('MySqlServer').Id]",
+    //  "metadata": {
+    //    "description": "Id of the MySql server."
+    //  }
+    //}
+  }
+}

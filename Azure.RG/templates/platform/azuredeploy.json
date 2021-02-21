@@ -1,0 +1,95 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "author": "Anton Shcherbyna",
+    "contact": "anton.shcherbyna@outlook.com",
+    "reference": "https://docs.microsoft.com/en-us/azure/templates/"
+  },
+  "parameters": {
+    "params": {
+      "type": "object",
+      "metadata": {
+        "description": "Base parameters to build resource names and tags."
+      }
+    },
+    "resourceLocation": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location to deploy the resources."
+      }
+    }
+  },
+  "variables": {
+    "baseName": "[toLower(concat(parameters('params').Market, '-',  parameters('params').Env, '-', parameters('params').Realm, '-', parameters('params').Company))]",
+    "names": {
+      "LogSpace": "[variables('baseName')]",
+      "SystemStorage": "[replace(concat('sys-', variables('baseName')), '-', '')]"
+    },
+    "tags": {
+      "Realm": "[toUpper(parameters('params').Realm)]",
+      "Env": "[toUpper(parameters('params').Env)]",
+      "Market": "[toUpper(parameters('params').Market)]"
+    },
+    "LogSpace": {
+      "Id": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('names').LogSpace)]"
+    },
+    "SystemStorage": {
+      "Name": "[variables('names').SystemStorage]",
+      "Id": "[resourceId('Microsoft.Storage/storageAccounts', variables('names').SystemStorage)]"
+    }
+  },
+  "resources": [
+    // System Storage
+    {
+      "name": "[variables('SystemStorage').Name]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "location": "[parameters('resourceLocation')]",
+      "tags": {
+        "realm": "[variables('tags').Realm]",
+        "env": "[variables('tags').Env]",
+        "market": "[variables('tags').Market]",
+        "displayName": "System Storage"
+      },
+      "properties": {
+        "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": false
+      },
+      "resources": [
+        {
+          "name": "default",
+          "type": "blobServices",
+          "apiVersion": "2019-06-01",
+          "properties": {
+          },
+          "dependsOn": [
+            "[variables('SystemStorage').Id]"
+          ]
+        },
+        {
+          "name": "default",
+          "type": "fileservices",
+          "apiVersion": "2019-06-01",
+          "properties": {
+            "shareDeleteRetentionPolicy": {
+              "enabled": true,
+              "days": 7
+            }
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('SystemStorage').Name, 'default')]",
+            "[variables('SystemStorage').Id]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}

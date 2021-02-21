@@ -1,0 +1,228 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "author": "Anton Shcherbyna",
+    "contact": "anton.shcherbyna@outlook.com",
+    "reference": "https://docs.microsoft.com/en-us/azure/templates/"
+  },
+  "parameters": {
+    "params": {
+      "type": "object",
+      "metadata": {
+        "description": "Base parameters to build resource names and tags."
+      }
+    },
+    "serverFarmName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Server Farm."
+      }
+    },
+    "serverFarmSku": {
+      "type": "string",
+      "allowedValues": [
+        "F1",
+        "D1"
+      ],
+      "defaultValue": "F1",
+      "metadata": {
+        "description": "Service tier of the Server Farm."
+      }
+    },
+    "services": {
+      "type": "array",
+      "defaultValue": [
+      ],
+      "metadata": {
+        "description": "Array of objects which specifies services to deploy."
+      }
+    },
+    "resourceLocation": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location to deploy the resources."
+      }
+    }
+  },
+  "variables": {
+    "baseName": "[toLower(concat(parameters('params').Market, '-',  parameters('params').Env, '-', parameters('params').Realm, '-', parameters('params').Company))]",
+    "names": {
+      "LogSpace": "[variables('baseName')]",
+      "AppInsights": "[variables('baseName')]",
+      "ServerFarm": "[concat(parameters('serverFarmName'), '-', variables('baseName'))]"
+    },
+    "tags": {
+      "Realm": "[toUpper(parameters('params').Realm)]",
+      "Env": "[toUpper(parameters('params').Env)]",
+      "Market": "[toUpper(parameters('params').Market)]"
+    },
+    "timZones": {
+      "TR": "Turkey Standard Time"
+    },
+    "LogSpace": {
+      "Name": "[variables('names').LogSpace]",
+      "Id": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('names').LogSpace)]"
+    },
+    "AppInsights": {
+      "Name": "[variables('names').AppInsights]",
+      "Id": "[resourceId('Microsoft.Insights/components', variables('names').AppInsights)]"
+    },
+    "ServerFarm": {
+      "Name": "[variables('names').ServerFarm]",
+      "Id": "[resourceId('Microsoft.Web/serverfarms', variables('names').ServerFarm)]",
+      "SKU": "[parameters('serverFarmSku')]"
+    },
+    "copy": [
+      {
+        "name": "Services",
+        "count": "[length(parameters('services'))]",
+        "input": {
+          "Name": "[ concat( toLower( parameters( 'services' )[copyIndex( 'Services' )].Name ), '-', toLower( parameters( 'services' )[copyIndex( 'Services' )].Type ), '-', variables('baseName')) ]",
+          "Id": "[ resourceId( 'Microsoft.Web/sites', concat( toLower( parameters( 'services' )[copyIndex( 'Services' )].Name ), '-', toLower( parameters( 'services' )[copyIndex( 'Services' )].Type ), '-', variables('baseName'))) ]",
+          "Kind": "[ if( equals( parameters( 'services' )[copyIndex( 'Services' )].Type, 'api'), 'api', if( equals( parameters( 'services' )[copyIndex( 'Services' )].Type, 'fnc'), 'functionapp', if( equals( parameters( 'services' )[copyIndex( 'Services' )].Type, 'web'), 'app', '')))]",
+          "Type": "[ parameters( 'services' )[copyIndex( 'Services' )].Type ]",
+          "ContentShare": "[ toLower( concat( parameters( 'services' )[copyIndex( 'Services' )].Name, '-', parameters( 'services' )[copyIndex( 'Services' )].Type, '-app') ) ]"
+        }
+      }
+    ]
+  },
+  "resources": [
+    // Server Farm
+    {
+      "name": "[variables('ServerFarm').Name]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2020-06-01",
+      "location": "[parameters('resourceLocation')]",
+      "tags": {
+        "realm": "[variables('tags').Realm]",
+        "env": "[variables('tags').Env]",
+        "market": "[variables('tags').Market]",
+        "displayName": "Server Farm"
+      },
+      "sku": {
+        "name": "[variables('ServerFarm').SKU]"
+      },
+      "properties": {
+        "name": "[variables('ServerFarm').Name]"
+      }
+    },
+    // Services
+    {
+      "copy": {
+        "name": "serviceIndex",
+        "count": "[ length( parameters( 'services' )) ]",
+        "mode": "Parallel"
+      },
+      "name": "[ variables( 'Services' )[copyIndex( 'serviceIndex' )].Name ]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2020-06-01",
+      "kind": "[ variables( 'Services' )[copyIndex( 'serviceIndex' )].Kind ]",
+      "location": "[parameters('resourceLocation')]",
+      "tags": {
+        "realm": "[variables('tags').Realm]",
+        "env": "[variables('tags').Env]",
+        "market": "[variables('tags').Market]",
+        "layer": "platform"
+      },
+      "properties": {
+        "serverFarmId": "[variables('ServerFarm').Id]",
+        "clientAffinityEnabled": false,
+        "httpsOnly": true
+      },
+      "resources": [
+        // settings for api and fnc, not for web
+        {
+          "condition": "[not( equals( variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Type, 'web') )]",
+          "name": "metadata",
+          "type": "config",
+          "apiVersion": "2020-06-01",
+          "tags": {
+            "realm": "[variables('tags').Realm]",
+            "env": "[variables('tags').Env]",
+            "market": "[variables('tags').Market]",
+            "displayName": "Platform Config"
+          },
+          "properties": {
+            "CURRENT_STACK": "dotnetcore"
+          },
+          "dependsOn": [
+            "[ variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Id ]"
+          ]
+        },
+        // settings for all kind of apps
+        {
+          "name": "web",
+          "type": "config",
+          "apiVersion": "2020-06-01",
+          "tags": {
+            "realm": "[variables('tags').Realm]",
+            "env": "[variables('tags').Env]",
+            "market": "[variables('tags').Market]",
+            "displayName": "Platform Config"
+          },
+          "properties": {
+            "defaultDocuments": [
+              "index.html"
+            ],
+            "remoteDebuggingVersion": "VS2019",
+            "webSocketsEnabled": "[ equals( variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Type, 'api') ]",
+            "alwaysOn": false,
+            "http20Enabled": true
+          },
+          "dependsOn": [
+            "[ variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Id ]"
+          ]
+        },
+        // config only for api app
+        {
+          "condition": "[ equals( variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Type, 'api') ]",
+          "name": "[ if( equals( variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Type, 'api'), 'appsettings', 'dummy-api' ) ]",
+          "type": "config",
+          "apiVersion": "2020-06-01",
+          "tags": {
+            "realm": "[variables('tags').Realm]",
+            "env": "[variables('tags').Env]",
+            "market": "[variables('tags').Market]",
+            "displayName": "Env Config"
+          },
+          "properties": {
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(variables('AppInsights').Id, providers('Microsoft.Insights', 'components').apiVersions[0]).InstrumentationKey]",
+            "ApplicationInsightsAgent_EXTENSION_VERSION": "~2",
+            "WEBSITE_RUN_FROM_PACKAGE": "1"
+          },
+          "dependsOn": [
+            "[ variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Id ]"
+          ]
+        },
+        // config only for fnc app
+        {
+          "condition": "[ equals( variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Type, 'fnc') ]",
+          "name": "[ if( equals( variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Type, 'fnc'), 'appsettings', 'dummy-fnc' ) ]",
+          "type": "config",
+          "apiVersion": "2020-06-01",
+          "tags": {
+            "realm": "[variables('tags').Realm]",
+            "env": "[variables('tags').Env]",
+            "market": "[variables('tags').Market]",
+            "displayName": "Env Config"
+          },
+          "properties": {
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(variables('AppInsights').Id, providers('Microsoft.Insights', 'components').apiVersions[0]).InstrumentationKey]",
+            "ApplicationInsightsAgent_EXTENSION_VERSION": "~2",
+            "FUNCTIONS_EXTENSION_VERSION": "~3"
+          },
+          "dependsOn": [
+            "[ variables( 'Services' )[ copyIndex( 'serviceIndex' ) ].Id ]"
+          ]
+        }
+      ],
+      "dependsOn": [
+        "[variables('ServerFarm').Id]"
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}
