@@ -68,7 +68,10 @@
         "databaseAccountOfferType": "Standard",
         "apiProperties": {
           "serverVersion": "[variables('MongoDbServer').Version]"
-        }
+        },
+        "isVirtualNetworkFilterEnabled": false,
+        "enableMultipleWriteLocations": false,
+        "enableFreeTier": true
       }
     },
     {
@@ -82,8 +85,7 @@
         "resource": {
           "id": "[parameters('databaseName')]"
         },
-        "options": {
-        }
+        "options": { "throughput": 400 }
       }
     }
   ],

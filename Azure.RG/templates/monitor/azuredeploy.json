@@ -14,7 +14,7 @@
       "type": "int",
       "minValue": -1,
       "maxValue": 730,
-      "defaultValue": 31,
+      "defaultValue": 0,
       "metadata": {
         "description": "Number of days to keep the logs. -1 for unlimited retention."
       }
@@ -26,21 +26,13 @@
         "description": "Location to deploy the resources."
       }
     }
-    //,
-    //"actionGroupEmail": {
-    //  "type": "string",
-    //  "metadata": {
-    //    "description": "Email address of default action group to send alerts."
-    //  }
-    //}
   },
   "variables": {
     "baseName": "[toLower(concat(parameters('params').Market, '-',  parameters('params').Env, '-', parameters('params').Realm, '-', parameters('params').Company))]",
     "names": {
       "LogSpace": "[variables('baseName')]",
       "AppInsights": "[variables('baseName')]",
-      "ActionGroup": "[variables('baseName')]",
-      "AnomaliesDetector": "[ concat('anomalies-', variables('baseName'))]"
+      "ActionGroup": "[variables('baseName')]"
     },
     "tags": {
       "Realm": "[toUpper(parameters('params').Realm)]",
@@ -56,16 +48,6 @@
       "Name": "[variables('names').AppInsights]",
       "Id": "[resourceId('Microsoft.Insights/components', variables('names').AppInsights)]"
     }
-    //,
-    //"ActionGroup": {
-    //  "Name": "[variables('names').ActionGroup]",
-    //  "Id": "[resourceId('microsoft.insights/actionGroups', variables('names').ActionGroup)]",
-    //  "ShortName": "Watchmen",
-    //  "Email": "[parameters('actionGroupEmail')]"
-    //},
-    //"AnomaliesDetector": {
-    //  "Name": "[variables('names').AnomaliesDetector]"
-    //}
   },
   "resources": [
     // Log Space
@@ -108,77 +90,7 @@
       "dependsOn": [
         "[variables('LogSpace').Id]"
       ]
-    },
-    // Default Action Group - Watchmen
-    //{
-    //  "name": "[variables('ActionGroup').Name]",
-    //  "type": "microsoft.insights/actionGroups",
-    //  "apiVersion": "2019-06-01",
-    //  "location": "global",
-    //  "tags": {
-    //    "realm": "[variables('tags').Realm]",
-    //    "env": "[variables('tags').Env]",
-    //    "market": "[variables('tags').Market]",
-    //    "displayName": "Action Group"
-    //  },
-    //  "properties": {
-    //    "groupShortName": "[variables('ActionGroup').ShortName]",
-    //    "enabled": true,
-    //    "emailReceivers": [
-    //      {
-    //        "name": "[concat('Email-', variables('ActionGroup').ShortName)]",
-    //        "emailAddress": "[variables('ActionGroup').Email]",
-    //        "useCommonAlertSchema": true
-    //      }
-    //    ]
-    //    //,
-    //    //"webhookReceivers":
-    //    //[
-    //    //	{
-    //    //		"name": "string",
-    //    //		"serviceUri": "string",
-    //    //		"useCommonAlertSchema": "boolean",
-    //    //		"useAadAuth": "boolean",
-    //    //		"objectId": "string",
-    //    //		"identifierUri": "string",
-    //    //		"tenantId": "string"
-    //    //	}
-    //    //],
-    //  }
-    //},
-    // App Insights - Anomalies Detector
-    //{
-    //  "name": "[variables('AnomaliesDetector').Name]",
-    //  "type": "microsoft.alertsmanagement/smartdetectoralertrules",
-    //  "apiVersion": "2019-06-01",
-    //  "location": "global",
-    //  "properties": {
-    //    "description": "Failure Anomalies notifies of an unusual rise in the rate of failed HTTP requests or dependency calls.",
-    //    "state": "Enabled",
-    //    "severity": "Sev3",
-    //    "frequency": "PT1M",
-    //    "detector": {
-    //      "id": "FailureAnomaliesDetector",
-    //      "name": "Failure Anomalies",
-    //      "description": "Detects if solution experiences an abnormal rise.",
-    //      "supportedResourceTypes": [
-    //        "ApplicationInsights"
-    //      ]
-    //    },
-    //    "scope": [
-    //      "[variables('AppInsights').Id]"
-    //    ],
-    //    "actionGroups": {
-    //      "groupIds": [
-    //        "[variables('ActionGroup').Id]"
-    //      ]
-    //    }
-    //  },
-    //  "dependsOn": [
-    //    "[variables('AppInsights').Id]",
-    //    "[variables('ActionGroup').Id]"
-    //  ]
-    //}
+    }
   ],
   "outputs": {
     "appInsightsResourceId": {

@@ -27,20 +27,20 @@
 ```
 
 # Connect to subscription
-Connect-AzureRmAccount -Subscription 'Free Trial'
+Connect-AzureRmAccount -Subscription 'HomeDev'
 
 # Deploy monitoring service
-./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot1' -TemplateFile 'templates/monitor/azuredeploy.json' -TemplateParametersFile 'templates/monitor/azuredeploy.parameters.json'
+./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot' -TemplateFile 'templates/monitor/azuredeploy.json' -TemplateParametersFile 'templates/monitor/azuredeploy.parameters.json'
 
 # Deploy AppService plan and App Services
-./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot1' -TemplateFile 'templates/platform/azuredeploy.json' -TemplateParametersFile 'templates/platform/azuredeploy.parameters.json'
+./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot' -TemplateFile 'templates/platform/azuredeploy.json' -TemplateParametersFile 'templates/platform/azuredeploy.parameters.json'
 
 
 # Deploy AppService plan and App Services
-./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot1' -TemplateFile 'templates/service-farm/azuredeploy.json' -TemplateParametersFile 'templates/service-farm/azuredeploy.parameters.json'
+./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot' -TemplateFile 'templates/service-farm/azuredeploy.json' -TemplateParametersFile 'templates/service-farm/azuredeploy.parameters.json'
 
 # Deploy AppService plan and App Services
-./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot1' -TemplateFile 'templates/server-cosmosdb/azuredeploy.json' -TemplateParametersFile 'templates/server-cosmosdb/azuredeploy.parameters.json'
+./Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation 'West Europe' -ResourceGroupName 'CryptoBot' -TemplateFile 'templates/server-cosmosdb/azuredeploy.json' -TemplateParametersFile 'templates/server-cosmosdb/azuredeploy.parameters.json'
 
 
 ```

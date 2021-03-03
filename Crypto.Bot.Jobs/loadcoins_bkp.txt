@@ -1,0 +1,33 @@
+﻿        [FunctionName("LoadCoins")]
+        public async Task LoadCoins([TimerTrigger("* */5 * * * *")] TimerInfo myTimer, ILogger log)
+        {
+            var newCoins = await coingeckoClient.GetCoinsAsync();
+
+            var dbCoins = await coinsRepository.GetCoinsAsync();
+
+            var dbCoinsIds = dbCoins.Select(c => c.Id).ToList();
+
+            await DeleteOldCoinsAsync(newCoins, dbCoinsIds);
+
+            await InsertNewCoinsAsync(newCoins, dbCoinsIds);
+        }
+
+        private async Task DeleteOldCoinsAsync(System.Collections.Generic.List<Domain.Entity.Coin> newCoins, System.Collections.Generic.List<string> dbCoinsIds)
+        {
+            var newCoinsIds = newCoins.Select(c => c.Id).ToList();
+            var deleteOldCoins = dbCoinsIds.Where(c => !newCoinsIds.Contains(c));
+            await coinsRepository.DeleteCoinsAsync(deleteOldCoins);
+        }
+
+        private async Task InsertNewCoinsAsync(System.Collections.Generic.List<Domain.Entity.Coin> newCoins, System.Collections.Generic.List<string> dbCoinsIds)
+        {
+            var insertCoins = newCoins.Where(x => !dbCoinsIds.Contains(x.Id)).ToArray();
+
+            var coinsChunk = insertCoins.Split(20).ToArray();
+
+            foreach (var coins in coinsChunk)
+            {
+                await coinsRepository.InsertCoinsAsync(coins);
+                await Task.Delay(300);
+            }
+        }
