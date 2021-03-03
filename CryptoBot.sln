@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "Azure.RG", "Azure.RG\Azure.RG.deployproj", "{8323037B-FA0B-4FFC-A56F-2B3F77B6E2C5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crypto.Bot", "Crypto.Bot\Crypto.Bot.csproj", "{4981E886-9772-4205-B649-4BC42C9CDF88}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crypto.Bot.Jobs", "Crypto.Bot.Jobs\Crypto.Bot.Jobs.csproj", "{C5433FE5-42EB-469E-8FE6-B9BE010BA925}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crypto.Bot.Api", "Crypto.Bot.Api\Crypto.Bot.Api.csproj", "{5FA06BF0-36CC-475C-8E9E-B64C9D1062E1}"
@@ -33,10 +31,6 @@ Global
 		{8323037B-FA0B-4FFC-A56F-2B3F77B6E2C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8323037B-FA0B-4FFC-A56F-2B3F77B6E2C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8323037B-FA0B-4FFC-A56F-2B3F77B6E2C5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4981E886-9772-4205-B649-4BC42C9CDF88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4981E886-9772-4205-B649-4BC42C9CDF88}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4981E886-9772-4205-B649-4BC42C9CDF88}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4981E886-9772-4205-B649-4BC42C9CDF88}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C5433FE5-42EB-469E-8FE6-B9BE010BA925}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C5433FE5-42EB-469E-8FE6-B9BE010BA925}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5433FE5-42EB-469E-8FE6-B9BE010BA925}.Release|Any CPU.ActiveCfg = Release|Any CPU

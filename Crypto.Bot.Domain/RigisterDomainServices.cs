@@ -44,7 +44,8 @@ namespace Crypto.Bot.Domain
         public static void RegisterHttpClients(this IServiceCollection services)
         {
             services.AddHttpClient();
-
+            
+            services.AddHttpClient<BotWebApiClient>();
             services.AddHttpClient<CoingeckoClient>();
         }
     }

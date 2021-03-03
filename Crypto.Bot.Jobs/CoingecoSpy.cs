@@ -12,20 +12,29 @@ namespace Crypto.Bot.Jobs
     public class CoingecoSpy
     {
         private readonly CoingeckoClient coingeckoClient;
+        private readonly BotWebApiClient botWebApiClient;
         private readonly EntityRepository<Listing> listingRepository;
         private readonly EntityRepository<PriceAlert> alertsRepository;
         private readonly TelegramBotClient botClient;
 
         public CoingecoSpy(
             CoingeckoClient coingeckoClient,
+            BotWebApiClient botWebApiClient,
             EntityRepository<Listing> listingRepository,
             EntityRepository<PriceAlert> alertsRepository,
             TelegramBotClient botClient)
         {
             this.coingeckoClient = coingeckoClient;
+            this.botWebApiClient = botWebApiClient;
             this.listingRepository = listingRepository;
             this.alertsRepository = alertsRepository;
             this.botClient = botClient;
+        }
+
+        [FunctionName("BotApiHealthCheck")]
+        public async Task BotApiHealthCheck([TimerTrigger("* */5 * * * *")] TimerInfo myTimer, ILogger log)
+        {
+            await botWebApiClient.HealthCheck();
         }
 
         [FunctionName("TrackListing")]
@@ -36,7 +45,7 @@ namespace Crypto.Bot.Jobs
 
             foreach (var listing in listings)
             {
-                if (newCoins.Any(c => c.Name.ToLower().Contains(listing.Name.ToLower())))
+                if (newCoins.Any(c => c.Symbol.ToLower() == listing.Name.ToLower()))
                 {
                     await botClient.SendTextMessageAsync(chatId: listing.ChatId,
                                                          text: $"Coin listed: {listing.Name}");
@@ -48,7 +57,7 @@ namespace Crypto.Bot.Jobs
         }
 
         [FunctionName("TrackPriceAlerts")]
-        public async Task TrackPriceAlerts([TimerTrigger("*/5 * * * * *")] TimerInfo myTimer, ILogger log)
+        public async Task TrackPriceAlerts([TimerTrigger("* */5 * * * *")] TimerInfo myTimer, ILogger log)
         {
             var alerts = await alertsRepository.GetAllAsync();
 
@@ -56,7 +65,7 @@ namespace Crypto.Bot.Jobs
             {
                 var coin = await coingeckoClient.GetCoinAsync(alert.Name);
 
-                if (coin == null)
+                if (coin?.Market_data?.Current_price == null)
                 {
                     return;
                 }
