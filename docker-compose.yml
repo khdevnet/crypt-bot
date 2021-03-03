@@ -19,7 +19,7 @@ services:
       context: ./
       dockerfile: DockerfileWebApi
     environment:
-     - BOT_bot__token=1614705142:AAG7hp5Nc8dPVej3LoFls6iE9RckzSzwVZI
+     - BOT_bot__token=asdasdasdasd
      - BOT_database__connectionString=mongodb://admin:ant123@crypt-bot_mongo_1:27017
     ports:
      - "8433:80"
@@ -30,7 +30,7 @@ services:
       context: ./
       dockerfile: DockerfileJobsFnc
     environment:
-     - BOT_bot__token=1614705142:AAG7hp5Nc8dPVej3LoFls6iE9RckzSzwVZI
+     - BOT_bot__token=asdasdasdasd
      - BOT_database__connectionString=mongodb://admin:ant123@crypt-bot_mongo_1:27017
     networks:
      - net

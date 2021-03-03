@@ -21,10 +21,10 @@ namespace Crypto.Bot.Domain.Command
         public async Task Execute(Message message)
         {
             const string usage = "Usage:\n" +
-                                    "/inline   - send inline keyboard\n" +
-                                    "/keyboard - send custom keyboard\n" +
-                                    "/photo    - send a photo\n" +
-                                    "/request  - request location or contact";
+                                    "/l add n=berry data - listen for new coin by name\n" +
+                                    "/l rmv n=berry data - remove coin by name\n" +
+                                    "/pa add id=berry-data&c=usd&t=drops(rises)&p=10 - listen for price drops/rises \n" +
+                                    "/pa rmv id=berry-data - remove listen";
             await bot.SendTextMessageAsync(
                 chatId: message.Chat.Id,
                 text: usage,
